@@ -9,444 +9,151 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GPA Tracker">
 <title>GPA Tracker</title>
-
-<!-- Inline SVG favicon as data URI -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231a1a1a'/><text y='72' x='10' font-size='65' font-family='monospace' fill='%23f5f0e8'>G</text></svg>">
-
-<!-- Apple touch icon inline -->
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%231a1a1a'/><text y='380' x='60' font-size='340' font-family='monospace' font-weight='bold' fill='%23f5f0e8'>G</text></svg>">
-
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-
 <style>
-  :root {
-    --ink: #1a1a1a;
-    --paper: #f5f0e8;
-    --rule: #c8bfa8;
-    --accent: #c0392b;
-    --safe: #27ae60;
-    --warn: #e67e22;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
-  }
+:root {
+  --ink: #1a1a1a; --paper: #f5f0e8; --rule: #c8bfa8;
+  --accent: #c0392b; --safe: #27ae60; --warn: #e67e22;
+  --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow-x: hidden; }
+body { background: #2a2a2a; font-family: var(--sans); min-height: 100vh; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* TOPBAR */
+.topbar { position: sticky; top: 0; z-index: 100; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.topbar-title { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+.topbar-sub { font-family: var(--mono); font-size: 9px; opacity: 0.5; letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.save-indicator { font-family: var(--mono); font-size: 9px; letter-spacing: 0.5px; color: var(--safe); opacity: 0; transition: opacity 0.4s; }
+.save-indicator.show { opacity: 1; }
+.icon-btn { background: rgba(255,255,255,0.1); border: none; color: var(--paper); width: 34px; height: 34px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+.icon-btn:active { background: rgba(255,255,255,0.25); }
 
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
+/* INSTALL */
+.install-banner { background: #2d6a4f; color: white; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--mono); font-size: 11px; }
+.install-banner.hidden { display: none; }
+.install-banner-text { flex: 1; line-height: 1.4; }
+.install-btn { background: white; color: #2d6a4f; border: none; padding: 6px 14px; font-family: var(--mono); font-size: 11px; font-weight: 700; cursor: pointer; border-radius: 4px; white-space: nowrap; }
+.install-close { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 18px; cursor: pointer; padding: 0 4px; }
+.ios-instructions { background: #1a3a2a; color: white; padding: 12px 16px; font-family: var(--mono); font-size: 11px; line-height: 1.7; display: none; }
+.ios-instructions.show { display: block; }
+.ios-instructions strong { color: #a8e6cf; }
 
-  body {
-    background: #2a2a2a;
-    font-family: var(--sans);
-    min-height: 100vh;
-    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
-  }
+/* SUMMARY BAR */
+.summary-bar { background: var(--paper); border-bottom: 2px solid var(--ink); padding: 10px 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.sum-stat { display: flex; flex-direction: column; gap: 2px; }
+.sum-label { font-family: var(--mono); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; color: #999; }
+.sum-value { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--ink); line-height: 1; }
+.sum-value.danger { color: var(--accent); } .sum-value.warn { color: var(--warn); } .sum-value.safe { color: var(--safe); }
 
-  /* ── TOP BAR ── */
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: var(--ink);
-    color: var(--paper);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    padding-top: max(12px, env(safe-area-inset-top));
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
+/* GPA BAR */
+.gpa-progress-wrap { background: var(--paper); padding: 8px 16px 18px; border-bottom: 1px solid var(--rule); }
+.gpa-progress-label { font-family: var(--mono); font-size: 8px; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+.gpa-bar-outer { height: 8px; background: #ddd; border-radius: 4px; position: relative; overflow: visible; }
+.gpa-bar-inner { height: 100%; border-radius: 4px; transition: width 0.4s, background 0.4s; background: var(--safe); }
+.gpa-target-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--accent); border-radius: 1px; }
+.gpa-target-tick::after { content: 'TARGET'; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 7px; color: var(--accent); white-space: nowrap; letter-spacing: 0.5px; }
 
-  .topbar-title {
-    font-family: var(--mono);
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 0.5px;
-  }
+/* CARDS */
+.subjects { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.subject-card { background: var(--paper); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.card-header { background: var(--ink); color: var(--paper); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-name { font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase; }
+.card-pills { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.pill { font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.3px; }
+.pill-cr  { background: rgba(255,255,255,0.12); }
+.pill-tgt { background: rgba(255,255,255,0.22); font-weight: 700; }
+.pill-max { background: rgba(255,255,255,0.08); font-size: 8px; }
+.card-edit-btn { background: rgba(255,255,255,0.1); border: none; color: var(--paper); font-size: 13px; padding: 3px 7px; border-radius: 4px; cursor: pointer; font-family: var(--mono); letter-spacing: 0.5px; flex-shrink: 0; }
+.card-edit-btn.active { background: rgba(255,200,0,0.3); }
+.card-body { padding: 12px 14px; }
 
-  .topbar-sub {
-    font-family: var(--mono);
-    font-size: 9px;
-    opacity: 0.5;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 1px;
-  }
+/* SLOTS */
+.slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 8px; margin-bottom: 10px; }
+.slot { display: flex; flex-direction: column; gap: 3px; position: relative; }
+.slot-label-wrap { display: flex; align-items: center; justify-content: center; min-height: 16px; }
+.slot-label { font-family: var(--mono); font-size: 8px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; cursor: default; }
+.edit-mode .slot-label { cursor: pointer; color: #555; border-bottom: 1px dashed #bbb; }
+.slot-input { border: none; border-bottom: 1.5px solid #ccc; background: transparent; width: 100%; text-align: center; font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--ink); padding: 4px 0 2px; outline: none; -webkit-appearance: none; appearance: none; }
+.slot-input:focus { border-bottom-color: var(--ink); }
+.slot-sub { font-family: var(--mono); font-size: 7.5px; color: #bbb; text-align: center; }
+.slot-remove-btn { display: none; position: absolute; top: -2px; right: -2px; background: var(--accent); border: none; color: white; font-size: 9px; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; align-items: center; justify-content: center; line-height: 1; }
+.edit-mode .slot-remove-btn { display: flex; }
 
-  .topbar-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
+/* ADD SOURCE */
+.add-source-row { display: none; margin-bottom: 10px; }
+.edit-mode .add-source-row { display: block; }
+.add-source-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: #f0ebe0; border: 1.5px dashed #bbb; border-radius: 6px; padding: 8px; cursor: pointer; font-family: var(--mono); font-size: 10px; color: #999; transition: all 0.15s; }
+.add-source-btn:active { background: #e0d8cc; }
 
-  .save-indicator {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.5px;
-    color: var(--safe);
-    opacity: 0;
-    transition: opacity 0.4s;
-  }
-  .save-indicator.show { opacity: 1; }
+/* FOOTER */
+.card-footer { border-top: 1px dashed var(--rule); padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.cf-stat { display: flex; flex-direction: column; gap: 1px; }
+.cf-label { font-family: var(--mono); font-size: 7.5px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+.cf-value { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink); }
+.cf-value.danger { color: var(--accent); } .cf-value.warn { color: var(--warn); } .cf-value.safe { color: var(--safe); }
+.budget-bar-wrap { margin-top: 10px; height: 5px; background: #e0d8cc; border-radius: 3px; overflow: hidden; }
+.budget-bar { height: 100%; border-radius: 3px; background: var(--safe); transition: width 0.3s, background 0.3s; }
 
-  .icon-btn {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: var(--paper);
-    width: 34px; height: 34px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s;
-  }
-  .icon-btn:active { background: rgba(255,255,255,0.25); }
+/* GRADE REF */
+.grade-ref { margin: 0 12px 12px; background: var(--paper); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.grade-ref-header { background: #333; color: #ccc; padding: 6px 12px; font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; }
+.grade-ref-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.gri { padding: 6px 8px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: 9px; color: #666; }
+.gri strong { display: block; font-size: 12px; color: var(--ink); }
 
-  /* ── INSTALL BANNER ── */
-  .install-banner {
-    background: #2d6a4f;
-    color: white;
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-family: var(--mono);
-    font-size: 11px;
-  }
+/* SETTINGS DRAWER */
+.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+.drawer { position: fixed; bottom: 0; left: 0; right: 0; z-index: 201; background: var(--paper); border-radius: 16px 16px 0 0; max-height: 90vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1); padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+.drawer.open { transform: translateY(0); }
+.drawer-handle { width: 40px; height: 4px; background: #ccc; border-radius: 2px; margin: 10px auto 0; }
+.drawer-title { font-family: var(--mono); font-weight: 700; font-size: 14px; padding: 12px 16px 10px; border-bottom: 1px solid var(--rule); }
+.drawer-section { padding: 14px 16px; border-bottom: 1px solid var(--rule); }
+.drawer-section-title { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 12px; }
 
-  .install-banner.hidden { display: none; }
+/* Setting rows */
+.setting-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.setting-row:last-child { margin-bottom: 0; }
+.setting-label { font-family: var(--mono); font-size: 11px; color: #555; flex: 1; }
+.setting-input { border: none; border-bottom: 1.5px solid #ccc; background: transparent; font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--ink); padding: 3px 0; outline: none; text-align: right; width: 80px; }
+.setting-input:focus { border-bottom-color: var(--ink); }
 
-  .install-banner-text { flex: 1; line-height: 1.4; }
-  .install-banner-text strong { font-size: 12px; }
+/* Subject settings */
+.subj-card { background: white; border-radius: 6px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.subj-card:last-child { margin-bottom: 0; }
+.subj-card-name { font-family: var(--mono); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 10px; color: var(--ink); }
+.subj-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.subj-row:last-child { margin-bottom: 0; }
+.subj-lbl { font-family: var(--mono); font-size: 10px; color: #999; width: 65px; flex-shrink: 0; }
+.subj-val { flex: 1; border: none; border-bottom: 1px solid #eee; background: transparent; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink); padding: 2px 0; outline: none; }
+.subj-val:focus { border-bottom-color: var(--ink); }
+.grade-sel { flex: 1; border: none; border-bottom: 1px solid #eee; background: transparent; font-family: var(--mono); font-size: 12px; color: var(--ink); padding: 2px 0; outline: none; }
 
-  .install-btn {
-    background: white;
-    color: #2d6a4f;
-    border: none;
-    padding: 6px 14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    border-radius: 4px;
-    white-space: nowrap;
-  }
+/* Buttons */
+.action-btn { display: block; width: 100%; padding: 11px; border: none; border-radius: 6px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; text-transform: uppercase; margin-bottom: 8px; }
+.action-btn:last-child { margin-bottom: 0; }
+.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-danger  { background: #fce8e6; color: var(--accent); }
+.btn-warn    { background: #fef5e7; color: var(--warn); }
 
-  .install-close {
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.6);
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0 4px;
-  }
+/* TOAST */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--ink); color: var(--paper); padding: 10px 20px; border-radius: 20px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.5px; transition: transform 0.3s; z-index: 999; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.bottom-spacer { height: max(24px, env(safe-area-inset-bottom)); }
 
-  /* iOS install instructions */
-  .ios-instructions {
-    background: #1a3a2a;
-    color: white;
-    padding: 12px 16px;
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.7;
-    display: none;
-  }
-  .ios-instructions.show { display: block; }
-  .ios-instructions strong { color: #a8e6cf; }
-
-  /* ── SUMMARY BAR ── */
-  .summary-bar {
-    background: var(--paper);
-    border-bottom: 2px solid var(--ink);
-    padding: 10px 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-  }
-
-  .sum-stat { display: flex; flex-direction: column; gap: 2px; }
-
-  .sum-label {
-    font-family: var(--mono);
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #999;
-  }
-
-  .sum-value {
-    font-family: var(--mono);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1;
-  }
-  .sum-value.danger { color: var(--accent); }
-  .sum-value.warn   { color: var(--warn); }
-  .sum-value.safe   { color: var(--safe); }
-
-  .gpa-progress-wrap {
-    background: var(--paper);
-    padding: 8px 16px 10px;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .gpa-progress-label {
-    font-family: var(--mono);
-    font-size: 8px;
-    color: #aaa;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .gpa-bar-outer {
-    height: 8px;
-    background: #ddd;
-    border-radius: 4px;
-    position: relative;
-    overflow: visible;
-  }
-
-  .gpa-bar-inner {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 0.4s, background 0.4s;
-    background: var(--safe);
-  }
-
-  .gpa-target-tick {
-    position: absolute;
-    top: -4px;
-    bottom: -4px;
-    width: 2px;
-    background: var(--accent);
-    border-radius: 1px;
-  }
-
-  .gpa-target-tick::after {
-    content: 'TARGET';
-    position: absolute;
-    bottom: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--mono);
-    font-size: 7px;
-    color: var(--accent);
-    white-space: nowrap;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── SUBJECT CARDS ── */
-  .subjects { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-
-  .subject-card {
-    background: var(--paper);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  }
-
-  .card-header {
-    background: var(--ink);
-    color: var(--paper);
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .card-name {
-    font-family: var(--mono);
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-
-  .card-pills { display: flex; gap: 6px; flex-shrink: 0; }
-
-  .pill {
-    font-family: var(--mono);
-    font-size: 9px;
-    padding: 2px 7px;
-    border-radius: 3px;
-    letter-spacing: 0.3px;
-  }
-
-  .pill-cr { background: rgba(255,255,255,0.12); }
-  .pill-tgt { background: rgba(255,255,255,0.22); font-weight: 700; }
-  .pill-max { background: rgba(255,255,255,0.08); font-size: 8px; }
-
-  .card-body { padding: 12px 14px; }
-
-  .slots-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px 8px;
-    margin-bottom: 12px;
-  }
-
-  .slot { display: flex; flex-direction: column; gap: 3px; }
-
-  .slot-label {
-    font-family: var(--mono);
-    font-size: 8px;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    text-align: center;
-  }
-
-  .slot-input {
-    border: none;
-    border-bottom: 1.5px solid #ccc;
-    background: transparent;
-    width: 100%;
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
-    padding: 4px 0 2px;
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .slot-input:focus { border-bottom-color: var(--ink); }
-
-  .slot-sub {
-    font-family: var(--mono);
-    font-size: 7.5px;
-    color: #bbb;
-    text-align: center;
-  }
-
-  .card-footer {
-    border-top: 1px dashed var(--rule);
-    padding-top: 10px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-  }
-
-  .cf-stat { display: flex; flex-direction: column; gap: 1px; }
-
-  .cf-label {
-    font-family: var(--mono);
-    font-size: 7.5px;
-    color: #aaa;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .cf-value {
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-  .cf-value.danger { color: var(--accent); }
-  .cf-value.warn   { color: var(--warn); }
-  .cf-value.safe   { color: var(--safe); }
-
-  .budget-bar-wrap {
-    margin-top: 10px;
-    height: 5px;
-    background: #e0d8cc;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .budget-bar {
-    height: 100%;
-    border-radius: 3px;
-    background: var(--safe);
-    transition: width 0.3s, background 0.3s;
-  }
-
-  /* ── GRADE REF ── */
-  .grade-ref {
-    margin: 0 12px 12px;
-    background: var(--paper);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  }
-
-  .grade-ref-header {
-    background: #333;
-    color: #ccc;
-    padding: 6px 12px;
-    font-family: var(--mono);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .grade-ref-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-  }
-
-  .gri {
-    padding: 6px 8px;
-    border-right: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 9px;
-    color: #666;
-  }
-  .gri strong { display: block; font-size: 12px; color: var(--ink); }
-
-  /* ── BOTTOM PADDING for safe area ── */
-  .bottom-spacer {
-    height: max(24px, env(safe-area-inset-bottom));
-  }
-
-  /* ── TOAST ── */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(60px);
-    background: var(--ink);
-    color: var(--paper);
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    transition: transform 0.3s;
-    z-index: 999;
-    white-space: nowrap;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ── PRINT ── */
-  @media print {
-    .topbar, .install-banner, .ios-instructions, .gpa-progress-wrap, .grade-ref { display: none !important; }
-    body { background: white; }
-    .subjects { padding: 8px; }
-    .subject-card { box-shadow: none; border: 1px solid #ccc; border-radius: 0; }
-    .summary-bar { border: 1px solid #ccc; }
-  }
+@media print {
+  .topbar,.install-banner,.ios-instructions,.gpa-progress-wrap,.grade-ref,.drawer,.drawer-overlay,.toast { display: none !important; }
+  body { background: white; }
+  .subject-card { box-shadow: none; border: 1px solid #ccc; border-radius: 0; }
+}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div>
     <div class="topbar-title">Mark Loss Tracker</div>
@@ -454,377 +161,439 @@
   </div>
   <div class="topbar-actions">
     <span class="save-indicator" id="save-ind">✓ SAVED</span>
-    <button class="icon-btn" onclick="resetData()" title="Reset all">🗑</button>
+    <button class="icon-btn" onclick="openDrawer()" title="Settings">⚙</button>
     <button class="icon-btn" onclick="window.print()" title="Print">⎙</button>
   </div>
 </div>
 
-<!-- INSTALL BANNER -->
 <div class="install-banner hidden" id="install-banner">
-  <div class="install-banner-text">
-    <strong>Add to Home Screen</strong><br>
-    Use this as an app — works offline
-  </div>
+  <div class="install-banner-text"><strong>Add to Home Screen</strong><br>Works offline after install</div>
   <button class="install-btn" id="install-btn">Install</button>
   <button class="install-close" id="install-close">✕</button>
 </div>
-
-<!-- iOS INSTRUCTIONS -->
 <div class="ios-instructions" id="ios-instructions">
   📲 To add to home screen on iOS:<br>
-  1. Tap the <strong>Share button ⎙</strong> at the bottom of Safari<br>
-  2. Scroll down and tap <strong>"Add to Home Screen"</strong><br>
-  3. Tap <strong>Add</strong> — done!
-  <br><br>
-  <span style="opacity:0.6;font-size:10px;">Note: This file must be hosted online for full PWA install. See instructions below.</span>
+  1. Tap <strong>Share ⎙</strong> at the bottom of Safari<br>
+  2. Tap <strong>"Add to Home Screen"</strong> → <strong>Add</strong>
   <button onclick="document.getElementById('ios-instructions').classList.remove('show')" style="margin-top:8px;display:block;background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:4px;">Dismiss</button>
 </div>
 
-<!-- SUMMARY BAR -->
 <div class="summary-bar">
-  <div class="sum-stat">
-    <div class="sum-label">Term 2 GPA</div>
-    <div class="sum-value" id="proj-gpa">3.569</div>
-  </div>
-  <div class="sum-stat">
-    <div class="sum-label">Annual GPA</div>
-    <div class="sum-value" id="annual-gpa">3.116</div>
-  </div>
-  <div class="sum-stat">
-    <div class="sum-label">Over Budget</div>
-    <div class="sum-value" id="over-budget">0</div>
-  </div>
+  <div class="sum-stat"><div class="sum-label">Term 2 GPA</div><div class="sum-value" id="proj-gpa">—</div></div>
+  <div class="sum-stat"><div class="sum-label">Annual GPA</div><div class="sum-value" id="annual-gpa">—</div></div>
+  <div class="sum-stat"><div class="sum-label">Over Budget</div><div class="sum-value" id="over-budget">0</div></div>
 </div>
 
-<!-- GPA PROGRESS BAR -->
 <div class="gpa-progress-wrap">
-  <div class="gpa-progress-label">
-    <span>0.0</span>
-    <span>GPA PROGRESS</span>
-    <span>4.0</span>
-  </div>
+  <div class="gpa-progress-label"><span>0.0</span><span>GPA PROGRESS</span><span>4.0</span></div>
   <div class="gpa-bar-outer">
-    <div class="gpa-bar-inner" id="gpa-bar" style="width:89.225%"></div>
-    <div class="gpa-target-tick" style="left:89.225%"></div>
+    <div class="gpa-bar-inner" id="gpa-bar" style="width:0%"></div>
+    <div class="gpa-target-tick" id="gpa-tick" style="left:89.225%"></div>
   </div>
 </div>
 
-<!-- SUBJECT CARDS -->
 <div class="subjects" id="subjects-container"></div>
 
-<!-- GRADE REFERENCE -->
 <div class="grade-ref">
   <div class="grade-ref-header">Grade Scale · CUFE</div>
   <div class="grade-ref-grid">
-    <div class="gri"><strong>A+</strong>≥97% · 4.0</div>
-    <div class="gri"><strong>A</strong>93–96% · 4.0</div>
-    <div class="gri"><strong>A−</strong>89–92% · 3.7</div>
-    <div class="gri"><strong>B+</strong>84–88% · 3.3</div>
-    <div class="gri"><strong>B</strong>80–83% · 3.0</div>
-    <div class="gri"><strong>B−</strong>76–79% · 2.7</div>
-    <div class="gri"><strong>C+</strong>73–75% · 2.3</div>
-    <div class="gri"><strong>C</strong>70–72% · 2.0</div>
+    <div class="gri"><strong>A+</strong>≥97%·4.0</div>
+    <div class="gri"><strong>A</strong>93–96%·4.0</div>
+    <div class="gri"><strong>A−</strong>89–92%·3.7</div>
+    <div class="gri"><strong>B+</strong>84–88%·3.3</div>
+    <div class="gri"><strong>B</strong>80–83%·3.0</div>
+    <div class="gri"><strong>B−</strong>76–79%·2.7</div>
+    <div class="gri"><strong>C+</strong>73–75%·2.3</div>
+    <div class="gri"><strong>C</strong>70–72%·2.0</div>
   </div>
 </div>
 
 <div class="bottom-spacer"></div>
 <div class="toast" id="toast"></div>
 
+<!-- SETTINGS DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">⚙ Settings</div>
+
+  <div class="drawer-section">
+    <div class="drawer-section-title">Term Setup</div>
+    <div class="setting-row">
+      <span class="setting-label">Term 1 GPA</span>
+      <input class="setting-input" type="number" id="s-t1gpa" step="0.001" min="0" max="4" oninput="applySettings()">
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Term 1 Credits</span>
+      <input class="setting-input" type="number" id="s-t1cr" step="1" min="1" max="30" oninput="applySettings()">
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Term 2 Credits</span>
+      <input class="setting-input" type="number" id="s-t2cr" step="1" min="1" max="30" oninput="applySettings()">
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Target GPA</span>
+      <input class="setting-input" type="number" id="s-target" step="0.001" min="0" max="4" oninput="applySettings()">
+    </div>
+  </div>
+
+  <div class="drawer-section">
+    <div class="drawer-section-title">Subject Goals</div>
+    <div id="subj-settings-list"></div>
+  </div>
+
+  <div class="drawer-section">
+    <div class="drawer-section-title">Actions</div>
+    <button class="action-btn btn-warn"    onclick="resetMarks()">🗑 Clear All Mark Entries</button>
+    <button class="action-btn btn-danger"  onclick="resetEverything()">⚠ Reset Everything to Defaults</button>
+    <button class="action-btn btn-primary" onclick="closeDrawer()">✓ Done</button>
+  </div>
+</div>
+
 <script>
-// ── DATA ──────────────────────────────────────────────────
-const STORAGE_KEY = 'cufe_gpa_tracker_v1';
-
-const subjects = [
-  { name: "Calculus 2",  credits: 3, targetGrade: "B+", gradePoints: 3.3, maxLost: 16 },
-  { name: "Dynamics",    credits: 3, targetGrade: "B+", gradePoints: 3.3, maxLost: 16 },
-  { name: "Physics 2",   credits: 3, targetGrade: "B",  gradePoints: 3.0, maxLost: 20 },
-  { name: "Production",  credits: 3, targetGrade: "A+", gradePoints: 4.0, maxLost: 3  },
-  { name: "Chemistry",   credits: 2, targetGrade: "A",  gradePoints: 4.0, maxLost: 7  },
-  { name: "Societal",    credits: 2, targetGrade: "A−", gradePoints: 3.7, maxLost: 11 },
+// ─── CONSTANTS ────────────────────────────────────────────
+const STORAGE_KEY = 'cufe_tracker_v4';
+const GRADE_OPTIONS = ["A+","A","A−","B+","B","B−","C+","C","C−","D+","D","F"];
+const GRADE_POINTS  = {"A+":4.0,"A":4.0,"A−":3.7,"B+":3.3,"B":3.0,"B−":2.7,"C+":2.3,"C":2.0,"C−":1.7,"D+":1.3,"D":1.0,"F":0.0};
+const GRADE_MIN     = {"A+":97,"A":93,"A−":89,"B+":84,"B":80,"B−":76,"C+":73,"C":70,"C−":67,"D+":64,"D":60,"F":0};
+const GRADE_THRESHOLDS = [
+  {grade:"A+",points:4.0,min:97},{grade:"A",points:4.0,min:93},{grade:"A−",points:3.7,min:89},
+  {grade:"B+",points:3.3,min:84},{grade:"B",points:3.0,min:80},{grade:"B−",points:2.7,min:76},
+  {grade:"C+",points:2.3,min:73},{grade:"C",points:2.0,min:70},{grade:"C−",points:1.7,min:67},
+  {grade:"D+",points:1.3,min:64},{grade:"D",points:1.0,min:60},{grade:"F",points:0.0,min:0},
 ];
 
-const sources = ["Quiz 1", "Quiz 2", "HW", "Midterm", "Lab", "Final"];
-
-const gradeThresholds = [
-  { grade: "A+", points: 4.0, min: 97 },
-  { grade: "A",  points: 4.0, min: 93 },
-  { grade: "A−", points: 3.7, min: 89 },
-  { grade: "B+", points: 3.3, min: 84 },
-  { grade: "B",  points: 3.0, min: 80 },
-  { grade: "B−", points: 2.7, min: 76 },
-  { grade: "C+", points: 2.3, min: 73 },
-  { grade: "C",  points: 2.0, min: 70 },
-  { grade: "C−", points: 1.7, min: 67 },
-  { grade: "D+", points: 1.3, min: 64 },
-  { grade: "D",  points: 1.0, min: 60 },
-  { grade: "F",  points: 0.0, min: 0  },
+const DEFAULT_SUBJECTS = [
+  {name:"Calculus 2", credits:3, targetGrade:"B+", sources:["Quiz 1","Quiz 2","HW","Midterm","Lab","Final"]},
+  {name:"Dynamics",   credits:3, targetGrade:"B+", sources:["Quiz 1","Quiz 2","HW","Midterm","Lab","Final"]},
+  {name:"Physics 2",  credits:3, targetGrade:"B",  sources:["Quiz 1","Quiz 2","HW","Midterm","Lab","Final"]},
+  {name:"Production", credits:3, targetGrade:"A+", sources:["Quiz 1","Quiz 2","HW","Midterm","Lab","Final"]},
+  {name:"Chemistry",  credits:2, targetGrade:"A",  sources:["Quiz 1","Quiz 2","HW","Midterm","Lab","Final"]},
+  {name:"Societal",   credits:2, targetGrade:"A−", sources:["Quiz 1","Quiz 2","HW","Midterm","Lab","Final"]},
 ];
+const DEFAULT_TERM = {t1gpa:2.690, t1cr:17, t2cr:16, target:3.569};
 
-// ── STORAGE ───────────────────────────────────────────────
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+// ─── STATE ────────────────────────────────────────────────
+let ST = {subjects:[], term:{...DEFAULT_TERM}, marks:{}};
+
+function maxLost(grade) { return 100 - (GRADE_MIN[grade] ?? 0); }
+function getGradeInfo(pct) {
+  for (const t of GRADE_THRESHOLDS) { if (pct >= t.min) return t; }
+  return GRADE_THRESHOLDS[GRADE_THRESHOLDS.length-1];
 }
 
-function saveData() {
-  const data = {};
-  subjects.forEach((_, idx) => {
-    data[idx] = {};
-    sources.forEach((__, s) => {
-      const el = document.getElementById(`slot-${idx}-${s}`);
-      data[idx][s] = el ? el.value : '';
-    });
-  });
+// ─── PERSISTENCE ──────────────────────────────────────────
+function load() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    const ind = document.getElementById('save-ind');
-    ind.classList.add('show');
-    setTimeout(() => ind.classList.remove('show'), 1500);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      ST.subjects = s.subjects || deepCopy(DEFAULT_SUBJECTS);
+      ST.term     = {...DEFAULT_TERM, ...(s.term||{})};
+      ST.marks    = s.marks || {};
+    } else {
+      ST.subjects = deepCopy(DEFAULT_SUBJECTS);
+      ST.term = {...DEFAULT_TERM};
+      ST.marks = {};
+    }
+  } catch {
+    ST.subjects = deepCopy(DEFAULT_SUBJECTS); ST.term = {...DEFAULT_TERM}; ST.marks = {};
+  }
+}
+
+function save() {
+  collectMarks();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ST));
+    const el = document.getElementById('save-ind');
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 1500);
   } catch {}
 }
 
-function restoreData() {
-  const data = loadData();
-  subjects.forEach((_, idx) => {
-    if (data[idx]) {
-      sources.forEach((__, s) => {
-        const el = document.getElementById(`slot-${idx}-${s}`);
-        if (el && data[idx][s] !== undefined) el.value = data[idx][s];
-      });
-    }
-  });
-}
+function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
 
-function resetData() {
-  if (!confirm('Clear all entered marks?')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  subjects.forEach((_, idx) => {
-    sources.forEach((__, s) => {
+// ─── COLLECT MARKS FROM DOM ───────────────────────────────
+function collectMarks() {
+  ST.subjects.forEach((subj, idx) => {
+    ST.marks[idx] = ST.marks[idx] || {};
+    subj.sources.forEach((_, s) => {
       const el = document.getElementById(`slot-${idx}-${s}`);
-      if (el) el.value = '';
+      if (el) ST.marks[idx][s] = el.value;
     });
   });
+}
+
+// ─── UPDATE STATS ─────────────────────────────────────────
+function update() {
+  const target = parseFloat(ST.term.target) || 3.569;
+  const t1gpa  = parseFloat(ST.term.t1gpa)  || 2.69;
+  const t1cr   = parseFloat(ST.term.t1cr)   || 17;
+  const t2cr   = parseFloat(ST.term.t2cr)   || 16;
+  let totalQP = 0, totalCr = 0, overBudget = 0;
+
+  ST.subjects.forEach((subj, idx) => {
+    let lost = 0;
+    subj.sources.forEach((_,s) => { lost += parseFloat(document.getElementById(`slot-${idx}-${s}`)?.value||0); });
+    const ml = maxLost(subj.targetGrade);
+    const pct = 100 - lost;
+    const gi  = getGradeInfo(pct);
+    const rem = ml - lost;
+    const over = lost > ml;
+    if (over) overBudget++;
+
+    const lEl = document.getElementById(`lost-${idx}`);
+    const rEl = document.getElementById(`rem-${idx}`);
+    const gEl = document.getElementById(`grade-${idx}`);
+    const bEl = document.getElementById(`bar-${idx}`);
+
+    if (lEl) lEl.textContent = lost.toFixed(1);
+    if (rEl) { rEl.textContent = over ? 'OVER!' : rem.toFixed(1); rEl.className = `cf-value ${over ? 'danger' : rem<=3 ? 'warn' : 'safe'}`; }
+    if (gEl) {
+      gEl.textContent = `${gi.grade} (${pct.toFixed(0)}%)`;
+      const tPts = GRADE_POINTS[subj.targetGrade]||0;
+      gEl.className = `cf-value ${over||gi.points<tPts ? 'danger' : gi.grade===subj.targetGrade ? 'safe' : 'warn'}`;
+    }
+    if (bEl) { const bp = ml>0 ? Math.min(100,(lost/ml)*100) : 100; bEl.style.width=bp+'%'; bEl.style.background=over?'#c0392b':bp>75?'#e67e22':'#27ae60'; }
+
+    totalQP += gi.points * subj.credits;
+    totalCr += subj.credits;
+  });
+
+  const projGPA  = totalCr > 0 ? totalQP/totalCr : 0;
+  const annualGPA = ((t1gpa*t1cr)+(projGPA*t2cr))/(t1cr+t2cr);
+
+  const pEl = document.getElementById('proj-gpa');
+  const aEl = document.getElementById('annual-gpa');
+  const oEl = document.getElementById('over-budget');
+  const bEl = document.getElementById('gpa-bar');
+  const tEl = document.getElementById('gpa-tick');
+
+  if (pEl) { pEl.textContent=projGPA.toFixed(3); pEl.className=`sum-value ${projGPA>=target?'safe':projGPA>=3.0?'warn':'danger'}`; }
+  if (aEl) aEl.textContent = annualGPA.toFixed(3);
+  if (oEl) { oEl.textContent=overBudget; oEl.className=`sum-value ${overBudget>0?'danger':'safe'}`; }
+  if (bEl) { bEl.style.width=Math.min(100,(projGPA/4)*100)+'%'; bEl.style.background=projGPA>=target?'#27ae60':projGPA>=3?'#e67e22':'#c0392b'; }
+  if (tEl) tEl.style.left=Math.min(100,(target/4)*100)+'%';
+}
+
+// ─── RENDER CARDS ─────────────────────────────────────────
+let editingIdx = null;
+
+function renderCards() {
+  const container = document.getElementById('subjects-container');
+  container.innerHTML = '';
+  ST.subjects.forEach((subj, idx) => {
+    const ml = maxLost(subj.targetGrade);
+    const urgency = ml<=3?'danger':ml<=7?'warn':'safe';
+    const isEditing = editingIdx === idx;
+
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    card.id = `card-${idx}`;
+
+    const slotsHTML = subj.sources.map((src, s) => `
+      <div class="slot">
+        <div class="slot-label-wrap">
+          <span class="slot-label" onclick="renameSource(${idx},${s})">${src}</span>
+        </div>
+        <input class="slot-input" type="number" inputmode="decimal"
+          min="0" max="100" step="0.5" id="slot-${idx}-${s}" placeholder="0"
+          oninput="update();save()">
+        <div class="slot-sub">lost</div>
+        <button class="slot-remove-btn" onclick="removeSource(${idx},${s})">✕</button>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-name">${subj.name}</span>
+        <div class="card-pills">
+          <span class="pill pill-cr">${subj.credits}CR</span>
+          <span class="pill pill-tgt">${subj.targetGrade}</span>
+          <span class="pill pill-max">−${ml}max</span>
+        </div>
+        <button class="card-edit-btn ${isEditing?'active':''}" onclick="toggleEdit(${idx})" title="Edit grading types">✏</button>
+      </div>
+      <div class="card-body ${isEditing?'edit-mode':''}" id="body-${idx}">
+        <div class="slots-grid" id="grid-${idx}">${slotsHTML}</div>
+        <div class="add-source-row">
+          <button class="add-source-btn" onclick="addSource(${idx})">＋ Add grading type</button>
+        </div>
+        <div class="card-footer">
+          <div class="cf-stat"><div class="cf-label">Lost</div><div class="cf-value" id="lost-${idx}">0</div></div>
+          <div class="cf-stat"><div class="cf-label">Budget Left</div><div class="cf-value ${urgency}" id="rem-${idx}">${ml}</div></div>
+          <div class="cf-stat"><div class="cf-label">Grade</div><div class="cf-value safe" id="grade-${idx}">${subj.targetGrade} (100%)</div></div>
+        </div>
+        <div class="budget-bar-wrap"><div class="budget-bar" id="bar-${idx}" style="width:0%"></div></div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  restoreMarks();
   update();
-  showToast('Data cleared');
 }
 
-// ── HELPERS ───────────────────────────────────────────────
-function getGradeInfo(pct) {
-  for (const t of gradeThresholds) {
-    if (pct >= t.min) return t;
+function restoreMarks() {
+  ST.subjects.forEach((subj, idx) => {
+    const saved = ST.marks[idx]||{};
+    subj.sources.forEach((_,s) => {
+      const el = document.getElementById(`slot-${idx}-${s}`);
+      if (el && saved[s]!==undefined) el.value = saved[s];
+    });
+  });
+}
+
+// ─── EDIT MODE ────────────────────────────────────────────
+function toggleEdit(idx) {
+  editingIdx = (editingIdx===idx) ? null : idx;
+  renderCards();
+  if (editingIdx===idx) showToast('Tap a label to rename · ✕ to remove');
+}
+
+function renameSource(idx, s) {
+  if (editingIdx !== idx) return;
+  const cur = ST.subjects[idx].sources[s];
+  const name = prompt(`Rename "${cur}":`, cur);
+  if (name && name.trim() && name.trim()!==cur) {
+    collectMarks();
+    ST.subjects[idx].sources[s] = name.trim();
+    renderCards();
+    save();
+    showToast(`Renamed to "${name.trim()}"`);
   }
-  return gradeThresholds[gradeThresholds.length - 1];
 }
 
+function removeSource(idx, s) {
+  if (ST.subjects[idx].sources.length <= 1) { showToast('Need at least 1 grading type'); return; }
+  collectMarks();
+  // Remap marks
+  const old = ST.marks[idx]||{};
+  const newM = {};
+  let ni = 0;
+  ST.subjects[idx].sources.forEach((_,oi) => { if (oi!==s) { newM[ni++]=old[oi]||''; } });
+  ST.marks[idx] = newM;
+  ST.subjects[idx].sources.splice(s,1);
+  renderCards();
+  save();
+}
+
+function addSource(idx) {
+  const name = prompt('New grading type name:', 'Assignment');
+  if (name && name.trim()) {
+    collectMarks();
+    ST.subjects[idx].sources.push(name.trim());
+    editingIdx = idx;
+    renderCards();
+    save();
+    showToast(`Added "${name.trim()}"`);
+  }
+}
+
+// ─── SETTINGS DRAWER ──────────────────────────────────────
+function openDrawer() {
+  // Populate term inputs
+  document.getElementById('s-t1gpa').value  = ST.term.t1gpa;
+  document.getElementById('s-t1cr').value   = ST.term.t1cr;
+  document.getElementById('s-t2cr').value   = ST.term.t2cr;
+  document.getElementById('s-target').value = ST.term.target;
+
+  // Build subject cards
+  const list = document.getElementById('subj-settings-list');
+  list.innerHTML = '';
+  ST.subjects.forEach((subj, idx) => {
+    const div = document.createElement('div');
+    div.className = 'subj-card';
+    div.innerHTML = `
+      <div class="subj-card-name" id="drawer-subj-name-${idx}">${subj.name}</div>
+      <div class="subj-row">
+        <span class="subj-lbl">Name</span>
+        <input class="subj-val" type="text" value="${subj.name}"
+          oninput="ST.subjects[${idx}].name=this.value; document.getElementById('drawer-subj-name-${idx}').textContent=this.value||'...'; applySettings()">
+      </div>
+      <div class="subj-row">
+        <span class="subj-lbl">Credits</span>
+        <input class="subj-val" type="number" min="1" max="10" step="1" value="${subj.credits}"
+          oninput="ST.subjects[${idx}].credits=parseInt(this.value)||1; applySettings()">
+      </div>
+      <div class="subj-row">
+        <span class="subj-lbl">Target</span>
+        <select class="grade-sel" onchange="ST.subjects[${idx}].targetGrade=this.value; applySettings()">
+          ${GRADE_OPTIONS.map(g=>`<option value="${g}" ${g===subj.targetGrade?'selected':''}>${g}</option>`).join('')}
+        </select>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+
+function applySettings() {
+  ST.term.t1gpa  = parseFloat(document.getElementById('s-t1gpa').value)  || DEFAULT_TERM.t1gpa;
+  ST.term.t1cr   = parseFloat(document.getElementById('s-t1cr').value)   || DEFAULT_TERM.t1cr;
+  ST.term.t2cr   = parseFloat(document.getElementById('s-t2cr').value)   || DEFAULT_TERM.t2cr;
+  ST.term.target = parseFloat(document.getElementById('s-target').value) || DEFAULT_TERM.target;
+  collectMarks();
+  renderCards();
+  save();
+}
+
+// ─── RESET ────────────────────────────────────────────────
+function resetMarks() {
+  if (!confirm('Clear all entered marks?')) return;
+  ST.marks = {};
+  renderCards(); save();
+  closeDrawer(); showToast('Marks cleared');
+}
+function resetEverything() {
+  if (!confirm('Reset ALL settings and marks to defaults?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  ST = {subjects:deepCopy(DEFAULT_SUBJECTS), term:{...DEFAULT_TERM}, marks:{}};
+  editingIdx = null;
+  closeDrawer(); renderCards(); showToast('Reset to defaults');
+}
+
+// ─── TOAST ────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
-// ── UPDATE ────────────────────────────────────────────────
-function update() {
-  let totalQP = 0, totalCredits = 0, overBudget = 0;
+// ─── INIT ─────────────────────────────────────────────────
+load();
+renderCards();
 
-  subjects.forEach((subj, idx) => {
-    let lost = 0;
-    sources.forEach((__, s) => {
-      const el = document.getElementById(`slot-${idx}-${s}`);
-      lost += parseFloat(el?.value || 0);
-    });
-
-    const pct = 100 - lost;
-    const gradeInfo = getGradeInfo(pct);
-    const remaining = subj.maxLost - lost;
-    const isOver = lost > subj.maxLost;
-    if (isOver) overBudget++;
-
-    const lostEl = document.getElementById(`lost-${idx}`);
-    const remEl  = document.getElementById(`rem-${idx}`);
-    const grdEl  = document.getElementById(`grade-${idx}`);
-    const barEl  = document.getElementById(`bar-${idx}`);
-
-    if (lostEl) lostEl.textContent = lost.toFixed(1);
-    if (remEl) {
-      remEl.textContent = isOver ? 'OVER!' : remaining.toFixed(1);
-      remEl.className = `cf-value ${isOver ? 'danger' : remaining <= 3 ? 'warn' : 'safe'}`;
-    }
-    if (grdEl) {
-      grdEl.textContent = `${gradeInfo.grade} (${pct.toFixed(0)}%)`;
-      const downgrade = gradeInfo.points < subj.gradePoints;
-      grdEl.className = `cf-value ${isOver || downgrade ? 'danger' : gradeInfo.grade === subj.targetGrade ? 'safe' : 'warn'}`;
-    }
-    if (barEl) {
-      const pct2 = Math.min(100, (lost / subj.maxLost) * 100);
-      barEl.style.width = pct2 + '%';
-      barEl.style.background = isOver ? '#c0392b' : pct2 > 75 ? '#e67e22' : '#27ae60';
-    }
-
-    totalQP += gradeInfo.points * subj.credits;
-    totalCredits += subj.credits;
-  });
-
-  const projGPA = totalCredits > 0 ? totalQP / totalCredits : 0;
-  const annualQP = (2.69 * 17) + (projGPA * 16);
-  const annualGPA = annualQP / 33;
-
-  const projEl = document.getElementById('proj-gpa');
-  const annEl  = document.getElementById('annual-gpa');
-  const obEl   = document.getElementById('over-budget');
-  const barEl  = document.getElementById('gpa-bar');
-
-  if (projEl) {
-    projEl.textContent = projGPA.toFixed(3);
-    projEl.className = `sum-value ${projGPA >= 3.569 ? 'safe' : projGPA >= 3.0 ? 'warn' : 'danger'}`;
-  }
-  if (annEl) annEl.textContent = annualGPA.toFixed(3);
-  if (obEl) {
-    obEl.textContent = overBudget;
-    obEl.className = `sum-value ${overBudget > 0 ? 'danger' : 'safe'}`;
-  }
-  if (barEl) {
-    barEl.style.width = Math.min(100, (projGPA / 4.0) * 100) + '%';
-    barEl.style.background = projGPA >= 3.569 ? '#27ae60' : projGPA >= 3.0 ? '#e67e22' : '#c0392b';
-  }
-}
-
-// ── BUILD CARDS ───────────────────────────────────────────
-const container = document.getElementById('subjects-container');
-subjects.forEach((subj, idx) => {
-  const card = document.createElement('div');
-  card.className = 'subject-card';
-  const urgency = subj.maxLost <= 3 ? 'danger' : subj.maxLost <= 7 ? 'warn' : 'safe';
-
-  card.innerHTML = `
-    <div class="card-header">
-      <span class="card-name">${subj.name}</span>
-      <div class="card-pills">
-        <span class="pill pill-cr">${subj.credits}CR</span>
-        <span class="pill pill-tgt">${subj.targetGrade}</span>
-        <span class="pill pill-max">−${subj.maxLost}max</span>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="slots-grid">
-        ${sources.map((src, s) => `
-          <div class="slot">
-            <div class="slot-label">${src}</div>
-            <input class="slot-input" type="number" inputmode="decimal"
-              min="0" max="100" step="0.5"
-              id="slot-${idx}-${s}" placeholder="0"
-              oninput="update(); saveData()" />
-            <div class="slot-sub">lost</div>
-          </div>
-        `).join('')}
-      </div>
-      <div class="card-footer">
-        <div class="cf-stat">
-          <div class="cf-label">Lost</div>
-          <div class="cf-value" id="lost-${idx}">0</div>
-        </div>
-        <div class="cf-stat">
-          <div class="cf-label">Budget Left</div>
-          <div class="cf-value ${urgency}" id="rem-${idx}">${subj.maxLost}</div>
-        </div>
-        <div class="cf-stat">
-          <div class="cf-label">Grade</div>
-          <div class="cf-value safe" id="grade-${idx}">${subj.targetGrade} (100%)</div>
-        </div>
-      </div>
-      <div class="budget-bar-wrap">
-        <div class="budget-bar" id="bar-${idx}" style="width:0%"></div>
-      </div>
-    </div>
-  `;
-  container.appendChild(card);
-});
-
-// ── INIT ──────────────────────────────────────────────────
-restoreData();
-update();
-
-// ── PWA: Install prompt ───────────────────────────────────
-let deferredPrompt = null;
+// ─── PWA ──────────────────────────────────────────────────
+let dp = null;
 const banner = document.getElementById('install-banner');
-const installBtn = document.getElementById('install-btn');
-const closeBtn = document.getElementById('install-close');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  banner.classList.remove('hidden');
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); dp=e; banner.classList.remove('hidden'); });
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (dp) { dp.prompt(); const {outcome}=await dp.userChoice; dp=null; banner.classList.add('hidden'); if(outcome==='accepted') showToast('✓ Added to home screen!'); }
 });
-
-installBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    banner.classList.add('hidden');
-    if (outcome === 'accepted') showToast('✓ Added to home screen!');
-  }
-});
-
-closeBtn.addEventListener('click', () => banner.classList.add('hidden'));
-
-// Detect iOS Safari and show manual instructions
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-const isInStandalone = window.matchMedia('(display-mode: standalone)').matches;
-if (isIOS && !isInStandalone) {
+document.getElementById('install-close').addEventListener('click', ()=>banner.classList.add('hidden'));
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches)
   document.getElementById('ios-instructions').classList.add('show');
-}
 
-// ── SERVICE WORKER (inline via blob) ─────────────────────
-// This enables offline use once the page is loaded
 if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE = 'gpa-tracker-v1';
-    const URLS = [self.location.href];
-    self.addEventListener('install', e => {
-      e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
-    });
-    self.addEventListener('fetch', e => {
-      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
-    });
-  `;
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(() => {});
+  const sw = `const C='gpa-v4';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll([self.location.href]))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
 }
 </script>
 
-<!-- PWA Manifest injected inline -->
 <script>
-(function() {
-  const manifest = {
-    name: "GPA Tracker — CUFE Term 2",
-    short_name: "GPA Tracker",
-    description: "Mark loss tracker for CUFE Year 1 Term 2",
-    start_url: ".",
-    display: "standalone",
-    background_color: "#1a1a1a",
-    theme_color: "#1a1a1a",
-    orientation: "portrait",
-    icons: [
-      {
-        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%231a1a1a'/><text y='380' x='60' font-size='340' font-family='monospace' font-weight='bold' fill='%23f5f0e8'>G</text></svg>",
-        sizes: "512x512",
-        type: "image/svg+xml",
-        purpose: "any maskable"
-      }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('link');
-  link.rel = 'manifest';
-  link.href = url;
-  document.head.appendChild(link);
+(function(){
+  const m={name:"GPA Tracker — CUFE",short_name:"GPA Tracker",start_url:".",display:"standalone",background_color:"#1a1a1a",theme_color:"#1a1a1a",orientation:"portrait",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%231a1a1a'/><text y='380' x='60' font-size='340' font-family='monospace' font-weight='bold' fill='%23f5f0e8'>G</text></svg>",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}]};
+  const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
+  document.head.appendChild(l);
 })();
 </script>
-
 </body>
 </html>
